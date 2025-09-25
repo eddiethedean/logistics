@@ -1,1 +1,6 @@
-/venv
+# Virtual environments
+venv/
+app/venv/
+.venv/
+env/
+.env/
