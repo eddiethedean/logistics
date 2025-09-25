@@ -24,4 +24,4 @@ def main():
     st.write("This application provides tactical logistics information for decision makers and planners.")
 
 if __name__ == "__main__":
-    main()
+        main()
