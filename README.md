@@ -1,4 +1,5 @@
-System purpose: Create an easily accessible, tactical logistics common operating picture
+System Purpose: Create an easily accessible, tactical logistics common operating picture
 for SOF decision makers and tactical planners ot enable better warfighter readiness.
 
-Technology: streamlit web app
+Technology: streamlit Python web app
+
