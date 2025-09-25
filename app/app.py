@@ -158,6 +158,123 @@ def main():
         st.dataframe(personnel_data, use_container_width=True)
     else:
         st.info("No personnel records found. Add some personnel data using the form above.")
+    
+    st.markdown("---")
+    
+    # Supply Management Section
+    st.header("📦 Supply Management")
+    st.write("Update supply class information and manage supply inventory.")
+    
+    # Initialize supply database
+    init_supply_database()
+    
+    # Supply form
+    with st.form("supply_form"):
+        st.subheader("Update Supply Class")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            supply_id = st.text_input("Supply ID", placeholder="Enter supply ID", help="Required field")
+            supply_name = st.text_input("Supply Name", placeholder="Enter supply name", help="Required field")
+            supply_class = st.selectbox("Supply Class", 
+                                      ["Ammunition", "Fuel", "Medical", "Food", "Equipment", "Clothing"], 
+                                      help="Select supply class")
+            supply_type = st.selectbox("Supply Type", 
+                                     ["Consumable", "Durable", "Perishable", "Hazardous"], 
+                                     help="Select supply type")
+        
+        with col2:
+            quantity = st.number_input("Quantity", min_value=0, value=0, help="Enter quantity in stock")
+            unit = st.selectbox("Unit", 
+                              ["Each", "Box", "Pallet", "Gallon", "Pound", "Kilogram"], 
+                              help="Select unit of measurement")
+            status = st.selectbox("Status", 
+                                ["Available", "Low Stock", "Out of Stock", "Reserved"], 
+                                help="Select supply status")
+            priority = st.selectbox("Priority", 
+                                  ["Low", "Medium", "High", "Critical"], 
+                                  help="Select supply priority")
+        
+        # Additional information
+        location = st.text_input("Storage Location", placeholder="Enter storage location")
+        supplier = st.text_input("Supplier", placeholder="Enter supplier name")
+        notes = st.text_area("Supply Notes", placeholder="Enter additional notes or comments")
+        
+        # Form validation
+        supply_validation_errors = []
+        
+        # Required field validation
+        if not supply_id:
+            supply_validation_errors.append("Supply ID is required")
+        if not supply_name:
+            supply_validation_errors.append("Supply Name is required")
+        
+        # Quantity validation
+        if quantity < 0:
+            supply_validation_errors.append("Quantity must be non-negative")
+        
+        # Display validation errors
+        if supply_validation_errors:
+            for error in supply_validation_errors:
+                st.error(f"⚠️ {error}")
+        
+        # Submit button
+        supply_submitted = st.form_submit_button("Save Supply Data", type="primary")
+        
+        if supply_submitted:
+            if not supply_validation_errors:
+                # Save to supply database
+                success = save_supply_data({
+                    'supply_id': supply_id,
+                    'supply_name': supply_name,
+                    'supply_class': supply_class,
+                    'supply_type': supply_type,
+                    'quantity': quantity,
+                    'unit': unit,
+                    'status': status,
+                    'priority': priority,
+                    'location': location,
+                    'supplier': supplier,
+                    'notes': notes,
+                    'updated_at': datetime.now().isoformat()
+                })
+                
+                if success:
+                    st.success("✅ Supply data saved successfully!")
+                    st.rerun()
+                else:
+                    st.error("❌ Failed to save supply data. Please try again.")
+            else:
+                st.warning("Please fix the validation errors before submitting.")
+    
+    # Display existing supply data
+    st.subheader("Current Supply Inventory")
+    supply_data = get_supply_data()
+    
+    if not supply_data.empty:
+        st.dataframe(supply_data, use_container_width=True)
+        
+        # Supply metrics
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            total_items = len(supply_data)
+            st.metric("Total Items", total_items)
+        
+        with col2:
+            low_stock_count = len(supply_data[supply_data['status'] == 'Low Stock'])
+            st.metric("Low Stock Items", low_stock_count, delta=f"-{low_stock_count}" if low_stock_count > 0 else "0")
+        
+        with col3:
+            out_of_stock_count = len(supply_data[supply_data['status'] == 'Out of Stock'])
+            st.metric("Out of Stock", out_of_stock_count, delta=f"-{out_of_stock_count}" if out_of_stock_count > 0 else "0")
+        
+        with col4:
+            critical_count = len(supply_data[supply_data['priority'] == 'Critical'])
+            st.metric("Critical Items", critical_count, delta=f"-{critical_count}" if critical_count > 0 else "0")
+    else:
+        st.info("No supply records found. Add some supply data using the form above.")
 
 def init_database():
     """Initialize the SQLite database for personnel data."""
@@ -225,6 +342,78 @@ def get_personnel_data():
         return df
     except Exception as e:
         st.error(f"Database error: {str(e)}")
+        return pd.DataFrame()
+
+def init_supply_database():
+    """Initialize the SQLite database for supply data."""
+    conn = sqlite3.connect('supply.db')
+    cursor = conn.cursor()
+    
+    # Create supply table if it doesn't exist
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS supply (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            supply_id TEXT UNIQUE NOT NULL,
+            supply_name TEXT NOT NULL,
+            supply_class TEXT NOT NULL,
+            supply_type TEXT NOT NULL,
+            quantity INTEGER NOT NULL,
+            unit TEXT NOT NULL,
+            status TEXT NOT NULL,
+            priority TEXT NOT NULL,
+            location TEXT,
+            supplier TEXT,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    conn.commit()
+    conn.close()
+
+def save_supply_data(supply_data):
+    """Save supply data to the database."""
+    try:
+        conn = sqlite3.connect('supply.db')
+        cursor = conn.cursor()
+        
+        # Insert or update supply data
+        cursor.execute('''
+            INSERT OR REPLACE INTO supply 
+            (supply_id, supply_name, supply_class, supply_type, quantity, unit, status, priority, location, supplier, notes, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            supply_data['supply_id'],
+            supply_data['supply_name'],
+            supply_data['supply_class'],
+            supply_data['supply_type'],
+            supply_data['quantity'],
+            supply_data['unit'],
+            supply_data['status'],
+            supply_data['priority'],
+            supply_data['location'],
+            supply_data['supplier'],
+            supply_data['notes'],
+            supply_data['updated_at']
+        ))
+        
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        st.error(f"Supply database error: {str(e)}")
+        return False
+
+def get_supply_data():
+    """Retrieve all supply data from the database."""
+    try:
+        conn = sqlite3.connect('supply.db')
+        df = pd.read_sql_query("SELECT * FROM supply ORDER BY updated_at DESC", conn)
+        conn.close()
+        return df
+    except Exception as e:
+        st.error(f"Supply database error: {str(e)}")
         return pd.DataFrame()
 
 if __name__ == "__main__":

@@ -7,6 +7,15 @@ Feature: Personnel Class Update # features/personnel_update.feature:1
     When a user saves content to personnel    # features/steps/personnel_update_steps.py:49
     Then new content is saved to database     # features/steps/personnel_update_steps.py:84
 
+Feature: Supply Class Update # features/supply_update.feature:1
+  As a logistician
+  I want to update supply class information
+  So that I can maintain accurate supply records
+  Scenario: Logistician updates a supply class   # features/supply_update.feature:6
+    Given an UI exists                           # features/steps/supply_update_steps.py:11
+    When a user saves content to supply form     # features/steps/supply_update_steps.py:37
+    Then new content is saved to supply database # features/steps/supply_update_steps.py:74
+
 Feature: Viewer sees map # features/viewer_sees_map.feature:1
   As a viewer
   I want to see the LogCOP map
