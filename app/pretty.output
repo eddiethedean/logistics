@@ -1,0 +1,9 @@
+Feature: Viewer sees map # features/viewer_sees_map.feature:1
+  As a viewer
+  I want to see the LogCOP map
+  So that I can view tactical logistics information geographically
+  Scenario: Viewer accesses the map        # features/viewer_sees_map.feature:6
+    Given a viewer wants to see the LogCOP # features/steps/viewer_sees_map_steps.py:11
+    When a user accesses the application   # features/steps/viewer_sees_map_steps.py:19
+    Then they see a map                    # features/steps/viewer_sees_map_steps.py:30
+

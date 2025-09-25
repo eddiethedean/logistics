@@ -22,6 +22,11 @@ Logistician |   Yes |        Yes          |           Yes              |        
 Admin       |   Yes |        Yes          |           Yes              |         Yes           |     Yes       |
 
 
-## BDD Features
-
+## BDD Features Checklist
+✅ Viewer sees map
+⬜️ Logistician enter the app using valid username and password
+⬜️ Viewer sees charts and tables
+⬜️ Logisticians Access
+⬜️ Logisticians can view and change log data
+⬜️ Logistician updates data
 
